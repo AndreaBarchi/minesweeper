@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "typescript": "^5.0.4"
+  },
+  "name": "minesweeper",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "description": ""
+}
