@@ -8,8 +8,8 @@ const tileWidth = 32;
 if (mainCanvas == null) {
     console.log("No element with id: ", mainCanvasId);
 }
-mainCanvas.height = canvasHeight + 1;
-mainCanvas.width = canvasWidth + 1;
+mainCanvas.height = canvasHeight;
+mainCanvas.width = canvasWidth;
 const context = mainCanvas.getContext("2d");
 console.log(context);
 let canvasArea = (mainCanvas.height * mainCanvas.width);
@@ -17,18 +17,18 @@ let tileArea = (tileHeight * tileWidth);
 const numberOfTiles = canvasArea / tileArea;
 console.log("Number of tiles: ", numberOfTiles);
 console.log("Tile area: ", tileArea);
-let tiles = new Array;
+let tiles = new Map;
 // tiles.fill({value: 0});
 // console.log(tiles);
-for (let col = 1; col < mainCanvas.width; col += tileWidth) {
-    for (let row = 1; row < mainCanvas.height; row += tileHeight) {
+for (let col = 0; col < mainCanvas.width; col += tileWidth) {
+    for (let row = 0; row < mainCanvas.height; row += tileHeight) {
         let tile = {
             col: col / tileWidth,
             row: row / tileHeight,
             value: 0
         };
-        tiles.push(tile);
-        context === null || context === void 0 ? void 0 : context.fillRect(col, row, tileWidth - 1, tileHeight - 1);
+        tiles.set(col + "-" + row, tile);
+        fillTile(col, row);
     }
 }
 console.log(tiles);
@@ -40,5 +40,5 @@ mainCanvas.addEventListener("click", (event) => {
 });
 function fillTile(col, row) {
     context.fillStyle = "green";
-    context === null || context === void 0 ? void 0 : context.fillRect(col, row, tileWidth - 1, tileHeight - 1);
+    context.fillRect(col, row, tileWidth, tileHeight);
 }

@@ -15,8 +15,8 @@ if (mainCanvas == null) {
     console.log("No element with id: ", mainCanvasId);
 }
 
-mainCanvas.height = canvasHeight+1;
-mainCanvas.width = canvasWidth+1;
+mainCanvas.height = canvasHeight;
+mainCanvas.width = canvasWidth;
 
 const context = mainCanvas.getContext("2d");
 console.log(context);
@@ -27,19 +27,19 @@ const numberOfTiles = canvasArea / tileArea;
 console.log("Number of tiles: ", numberOfTiles);
 console.log("Tile area: ", tileArea);
 
-let tiles = new Array<Tile>;
+let tiles = new Map<String,Tile>;
 // tiles.fill({value: 0});
 // console.log(tiles);
 
-for(let col = 1; col < mainCanvas.width; col += tileWidth) {
-    for(let row = 1; row < mainCanvas.height; row += tileHeight) {
+for(let col = 0; col < mainCanvas.width; col += tileWidth) {
+    for(let row = 0; row < mainCanvas.height; row += tileHeight) {
         let tile: Tile = {
             col: col/tileWidth,
             row: row/tileHeight,
             value: 0
         }
-        tiles.push(tile);
-        context?.fillRect(col, row, tileWidth-1, tileHeight-1);
+        tiles.set(col+"-"+row, tile);
+        fillTile(col, row);
     }
 }
 console.log(tiles);
@@ -52,6 +52,6 @@ mainCanvas.addEventListener("click", (event)=> {
 });
 
 function fillTile(col:number, row:number): void {
-    context.fillStyle = "green";
-    context?.fillRect(col, row, tileWidth-1, tileHeight-1);
+    context!.fillStyle = "green";
+    context!.fillRect(col, row, tileWidth, tileHeight);
 }
