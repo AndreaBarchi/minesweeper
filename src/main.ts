@@ -54,4 +54,5 @@ mainCanvas.addEventListener("click", (event)=> {
 function fillTile(col:number, row:number): void {
     context!.fillStyle = "green";
     context!.fillRect(col, row, tileWidth, tileHeight);
+    context!.strokeRect(col, row, tileWidth, tileHeight);
 }
