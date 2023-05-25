@@ -18,25 +18,26 @@ const numberOfTiles = canvasArea / tileArea;
 console.log("Number of tiles: ", numberOfTiles);
 console.log("Tile area: ", tileArea);
 let tiles = new Map;
-// tiles.fill({value: 0});
-// console.log(tiles);
 for (let col = 0; col < mainCanvas.width; col += tileWidth) {
     for (let row = 0; row < mainCanvas.height; row += tileHeight) {
         let tile = {
             col: col / tileWidth,
             row: row / tileHeight,
-            value: 0
+            value: 0,
+            click: () => {
+                console.log("Test click method on tile: " + (col / tileWidth) + "-" + (row / tileHeight));
+            }
         };
-        tiles.set(col + "-" + row, tile);
+        tiles.set((col / tileWidth) + "-" + (row / tileHeight), tile);
         fillTile(col, row);
+        ;
     }
 }
 console.log(tiles);
 mainCanvas.addEventListener("click", (event) => {
     let col = Math.floor(Math.abs(event.offsetX / tileWidth));
     let row = Math.floor(Math.abs(event.offsetY / tileHeight));
-    // console.log("Clicked at: ", event.offsetX + " : " + event.offsetY);
-    console.log("Clicked tile at col: " + col + " and row: " + row);
+    tiles.get(col + "-" + row).click();
 });
 function fillTile(col, row) {
     context.fillStyle = "green";
