@@ -1,3 +1,13 @@
+#canvas-div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#command-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 #main-canvas {
     background-color: red;
 }
