@@ -1,16 +1,18 @@
 "use strict";
 const mainCanvasId = "main-canvas";
 const startButtonId = "start-button";
+const flagsLabelId = "flags-label";
 const mainCanvas = document.getElementById(mainCanvasId);
 const context = mainCanvas.getContext("2d");
 const startButton = document.getElementById(startButtonId);
+const flagsLabel = document.getElementById(flagsLabelId);
 // GAME VARS
 const tileHeight = 32;
 const tileWidth = 32;
 let gameColumns = 9;
 let gameRows = 9;
 let gameBombs = 10;
-let isFirstClick = true;
+let flags = 10;
 let tiles = new Map;
 var State;
 (function (State) {
@@ -20,10 +22,10 @@ var State;
 let gameState = State.gameOver;
 function startGame(columns, rows, bombs) {
     console.log("Starting new game");
-    isFirstClick = true;
     startButton.innerText = "Restart";
     startButton.onclick = () => {
         mainCanvas.removeEventListener("click", tileClick);
+        mainCanvas.removeEventListener("contextmenu", tileRightClick);
         startGame(9, 9, 10);
     };
     gameColumns = columns;
@@ -42,6 +44,7 @@ function setup() {
     mainCanvas.width = canvasWidth;
     console.log("init tiles");
     console.log(tiles);
+    flagsLabel.innerText = flags.toString();
     // RANDOMIZING BOMBS
     let bombArray = randomizeBombs();
     console.log("Bomb array", bombArray);
@@ -59,9 +62,11 @@ function setup() {
                 row: row,
                 isBomb: bombArray.includes(col + "-" + row) ? true : false,
                 value: calculateValues(col, row, bombArray),
+                clicked: false,
+                flagged: false,
                 click: () => {
-                    if (gameState != State.gameOver) {
-                        console.log("Clicked on: " + col + "-" + row);
+                    console.log("Clicked on: " + col + "-" + row);
+                    if (gameState != State.gameOver && !tile.flagged) {
                         if (tile.isBomb) {
                             console.log("Tile: " + col + "-" + row + " is bomb");
                             console.log(tile);
@@ -71,28 +76,47 @@ function setup() {
                             gameOver();
                         }
                         else {
-                            if (isFirstClick) {
-                                console.log("First Click");
-                                isFirstClick = false;
-                            }
-                            else {
-                                context.fillStyle = "black";
-                                context.font = "25pt Arial";
-                                context.textAlign = "center";
-                                console.log(context.measureText(tile.value.toString()));
-                                console.log("Filling at: " + (tcol + tileWidth / 2) + "-" + (trow));
-                                context.fillText(tile.value.toString(), tcol + tileWidth / 2, trow + tileHeight - 4);
-                            }
+                            tile.clicked = true;
+                            fillTile(tcol, trow, "gray");
+                            context.fillStyle = "black";
+                            context.font = "25pt Arial";
+                            context.textAlign = "center";
+                            console.log(context.measureText(tile.value.toString()));
+                            console.log("Filling at: " + (tcol + tileWidth / 2) + "-" + (trow));
+                            context.fillText(tile.value.toString(), tcol + tileWidth / 2, trow + tileHeight - 4);
+                        }
+                    }
+                },
+                rightClick: () => {
+                    console.log("Clicked on: " + col + "-" + row);
+                    if (gameState != State.gameOver && !tile.clicked) {
+                        if (tile.flagged) {
+                            tile.flagged = false;
+                            flags += 1;
+                            flagsLabel.innerText = flags.toString();
+                            fillTile(tcol, trow, "green");
+                        }
+                        else {
+                            tile.flagged = true;
+                            flags -= 1;
+                            flagsLabel.innerText = flags.toString();
+                            context.fillStyle = "orange";
+                            context.font = "25pt Arial";
+                            context.textAlign = "center";
+                            console.log(context.measureText(tile.value.toString()));
+                            console.log("Filling at: " + (tcol + tileWidth / 2) + "-" + (trow));
+                            context.fillText("?", tcol + tileWidth / 2, trow + tileHeight - 4);
                         }
                     }
                 }
             };
             tiles.set((col) + "-" + (row), tile);
-            fillTile(tcol, trow);
+            fillTile(tcol, trow, "green");
         }
     }
     console.log(tiles);
     mainCanvas.addEventListener("click", tileClick);
+    mainCanvas.addEventListener("contextmenu", tileRightClick);
 }
 function tileClick(event) {
     let col = Math.floor(Math.abs(event.offsetX / tileWidth));
@@ -100,8 +124,16 @@ function tileClick(event) {
     console.log("Real coords: " + event.offsetX + "-" + event.offsetY);
     tiles.get(col + "-" + row).click();
 }
-function fillTile(col, row) {
-    context.fillStyle = "green";
+function tileRightClick(event) {
+    event.preventDefault();
+    let col = Math.floor(Math.abs(event.offsetX / tileWidth));
+    let row = Math.floor(Math.abs(event.offsetY / tileHeight));
+    console.log("Real coords: " + event.offsetX + "-" + event.offsetY);
+    //    console.log("Right clicked: " + col+"-"+row);
+    tiles.get(col + "-" + row).rightClick();
+}
+function fillTile(col, row, color) {
+    context.fillStyle = color;
     context.fillRect(col, row, tileWidth, tileHeight);
     context.strokeRect(col, row, tileWidth, tileHeight);
 }
@@ -132,6 +164,7 @@ function gameOver() {
     startButton.innerText = "Start new Game";
     startButton.onclick = () => {
         mainCanvas.removeEventListener("click", tileClick);
+        mainCanvas.removeEventListener("contextmenu", tileRightClick);
         startGame(9, 9, 10);
     };
 }
