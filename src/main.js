@@ -14,6 +14,7 @@ let gameRows = 9;
 let gameBombs = 10;
 let flags = 10;
 let tiles = new Map;
+let tilesCount = 0;
 var State;
 (function (State) {
     State[State["inProgress"] = 0] = "inProgress";
@@ -21,7 +22,6 @@ var State;
 })(State || (State = {}));
 let gameState = State.gameOver;
 function startGame(columns, rows, bombs) {
-    console.log("Starting new game");
     startButton.innerText = "Restart";
     startButton.onclick = () => {
         mainCanvas.removeEventListener("click", tileClick);
@@ -34,25 +34,16 @@ function startGame(columns, rows, bombs) {
     setup();
 }
 function setup() {
-    if (mainCanvas == null) {
-        console.log("No element with id: ", mainCanvasId);
-    }
     gameState = State.inProgress;
     const canvasHeight = gameColumns * tileHeight;
     const canvasWidth = gameRows * tileWidth;
     mainCanvas.height = canvasHeight;
     mainCanvas.width = canvasWidth;
-    console.log("init tiles");
-    console.log(tiles);
     flagsLabel.innerText = flags.toString();
-    // RANDOMIZING BOMBS
     let bombArray = randomizeBombs();
-    console.log("Bomb array", bombArray);
-    let canvasArea = (mainCanvas.height * mainCanvas.width);
-    let tileArea = (tileHeight * tileWidth);
-    const numberOfTiles = canvasArea / tileArea;
-    console.log("Number of tiles: ", numberOfTiles);
-    console.log("Tile area: ", tileArea);
+    //    let canvasArea = (mainCanvas.height * mainCanvas.width);
+    //    let tileArea = (tileHeight * tileWidth);
+    //    const numberOfTiles = canvasArea / tileArea;
     for (let tcol = 0; tcol < mainCanvas.width; tcol += tileWidth) {
         for (let trow = 0; trow < mainCanvas.height; trow += tileHeight) {
             let col = tcol / tileWidth;
@@ -64,31 +55,33 @@ function setup() {
                 value: calculateValues(col, row, bombArray),
                 clicked: false,
                 flagged: false,
+                neighbors: calculateNeighbors(col, row),
                 click: () => {
-                    console.log("Clicked on: " + col + "-" + row);
-                    if (gameState != State.gameOver && !tile.flagged) {
+                    if (gameState != State.gameOver && !tile.flagged && !tile.clicked) {
                         if (tile.isBomb) {
-                            console.log("Tile: " + col + "-" + row + " is bomb");
-                            console.log(tile);
                             context.fillStyle = "red";
                             context.fillRect(tcol, trow, tileWidth, tileHeight);
                             context.strokeRect(tcol, trow, tileWidth, tileHeight);
-                            gameOver();
+                            gameOver("lost");
                         }
                         else {
                             tile.clicked = true;
+                            tilesCount -= 1;
+                            if (tilesCount <= 0) {
+                                gameOver("won");
+                            }
                             fillTile(tcol, trow, "gray");
                             context.fillStyle = "black";
                             context.font = "25pt Arial";
                             context.textAlign = "center";
-                            console.log(context.measureText(tile.value.toString()));
-                            console.log("Filling at: " + (tcol + tileWidth / 2) + "-" + (trow));
                             context.fillText(tile.value.toString(), tcol + tileWidth / 2, trow + tileHeight - 4);
+                            if (tile.value == 0) {
+                                clickNeighbors(tile);
+                            }
                         }
                     }
                 },
                 rightClick: () => {
-                    console.log("Clicked on: " + col + "-" + row);
                     if (gameState != State.gameOver && !tile.clicked) {
                         if (tile.flagged) {
                             tile.flagged = false;
@@ -103,33 +96,33 @@ function setup() {
                             context.fillStyle = "orange";
                             context.font = "25pt Arial";
                             context.textAlign = "center";
-                            console.log(context.measureText(tile.value.toString()));
-                            console.log("Filling at: " + (tcol + tileWidth / 2) + "-" + (trow));
                             context.fillText("?", tcol + tileWidth / 2, trow + tileHeight - 4);
                         }
                     }
                 }
             };
             tiles.set((col) + "-" + (row), tile);
-            fillTile(tcol, trow, "green");
+            if (tile.isBomb) {
+                fillTile(tcol, trow, "red");
+            }
+            else {
+                fillTile(tcol, trow, "green");
+                tilesCount += 1;
+            }
         }
     }
-    console.log(tiles);
     mainCanvas.addEventListener("click", tileClick);
     mainCanvas.addEventListener("contextmenu", tileRightClick);
 }
 function tileClick(event) {
     let col = Math.floor(Math.abs(event.offsetX / tileWidth));
     let row = Math.floor(Math.abs(event.offsetY / tileHeight));
-    console.log("Real coords: " + event.offsetX + "-" + event.offsetY);
     tiles.get(col + "-" + row).click();
 }
 function tileRightClick(event) {
     event.preventDefault();
     let col = Math.floor(Math.abs(event.offsetX / tileWidth));
     let row = Math.floor(Math.abs(event.offsetY / tileHeight));
-    console.log("Real coords: " + event.offsetX + "-" + event.offsetY);
-    //    console.log("Right clicked: " + col+"-"+row);
     tiles.get(col + "-" + row).rightClick();
 }
 function fillTile(col, row, color) {
@@ -159,7 +152,40 @@ function calculateValues(col, row, bombArray) {
     }
     return bombs;
 }
-function gameOver() {
+function calculateNeighbors(col, row) {
+    let neighbors = [];
+    if (col > 0) {
+        neighbors.push((col - 1) + "-" + (row));
+        if (row > 0)
+            neighbors.push((col - 1) + "-" + (row - 1));
+    }
+    if (row < (gameRows - 1)) {
+        neighbors.push((col) + "-" + (row + 1));
+        if (col > 0)
+            neighbors.push((col - 1) + "-" + (row + 1));
+    }
+    if (col < (gameColumns - 1)) {
+        neighbors.push((col + 1) + "-" + (row));
+        if (row < (gameRows - 1))
+            neighbors.push((col + 1) + "-" + (row + 1));
+    }
+    if (row > 0) {
+        neighbors.push((col) + "-" + (row - 1));
+        if (col < (gameColumns - 1))
+            neighbors.push((col + 1) + "-" + (row - 1));
+    }
+    return neighbors;
+}
+function clickNeighbors(tile) {
+    for (let neighborTile of tile.neighbors) {
+        let nTile = tiles.get(neighborTile);
+        if (nTile.value == 0 && !(nTile === null || nTile === void 0 ? void 0 : nTile.clicked)) {
+            nTile.click();
+        }
+    }
+}
+function gameOver(result) {
+    console.log(result == "won" ? "You won!" : "You lost");
     gameState = State.gameOver;
     startButton.innerText = "Start new Game";
     startButton.onclick = () => {
