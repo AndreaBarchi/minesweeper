@@ -1,10 +1,12 @@
 const mainCanvasId = "main-canvas";
 const startButtonId = "start-button";
 const flagsLabelId = "flags-label";
+const difficultySelectId = "difficulty-select";
 const mainCanvas = document.getElementById(mainCanvasId) as HTMLCanvasElement;
 const context = mainCanvas.getContext("2d");
 const startButton = document.getElementById(startButtonId) as HTMLButtonElement;
 const flagsLabel = document.getElementById(flagsLabelId) as HTMLHeadingElement;
+const difficultySelect = document.getElementById(difficultySelectId) as HTMLSelectElement;
 
 // GAME VARS
 const tileHeight = 32;
@@ -35,24 +37,52 @@ interface Tile {
     rightClick(): any;
 }
 
-function startGame(columns: number, rows: number, bombs: number) {
+function getGameParams(): Map<string, number> {
+    let params = new Map<string, number>;
+    switch(difficultySelect.value){
+        case "easy":
+           params.set("columns", 9); 
+           params.set("rows", 9); 
+           params.set("bombs", 10); 
+        break;
+        case "intermediate":
+           params.set("columns", 16); 
+           params.set("rows", 16); 
+           params.set("bombs", 40); 
+        break;
+        case "hard":
+           params.set("columns", 30); 
+           params.set("rows", 16); 
+           params.set("bombs", 99); 
+        break;
+        case "custom":
+           params.set("columns", 30); 
+           params.set("rows", 16); 
+           params.set("bombs", 99); 
+        break;
+    }
+    return params;
+}
+
+function startGame() {
+    let gameParams: Map<string, number> = getGameParams(); 
     startButton.innerText = "Restart";
     startButton.onclick = () => {
         mainCanvas.removeEventListener("click", tileClick);
         mainCanvas.removeEventListener("contextmenu", tileRightClick);
-        startGame(9, 9, 10);
+        startGame();
     }
-    gameColumns = columns;
-    gameRows = rows;
-    gameBombs = bombs;
+    gameColumns = gameParams.get("columns")!;
+    gameRows = gameParams.get("rows")!;
+    gameBombs = gameParams.get("bombs")!;
     setup();
 }
 
 function setup() {
     gameState = State.inProgress;
 
-    const canvasHeight = gameColumns*tileHeight;
-    const canvasWidth = gameRows*tileWidth;
+    const canvasWidth = gameColumns*tileWidth;
+    const canvasHeight = gameRows*tileHeight;
 
     mainCanvas.height = canvasHeight;
     mainCanvas.width = canvasWidth;
@@ -160,6 +190,7 @@ function randomizeBombs(): Array<string>{
             bombArray.push(tile);
         }
     }
+    console.log(bombArray);
     return bombArray;
 }
 
@@ -207,6 +238,9 @@ function clickNeighbors(tile: Tile){
         if(nTile!.value == 0 && !nTile?.clicked){
             nTile!.click();
         } 
+//        if(nTile != undefined && nTile!.value == 0 && !nTile?.clicked){
+//            nTile!.click();
+//        } 
     }
 }
 
@@ -217,6 +251,6 @@ function gameOver(result: String) {
     startButton.onclick = () => {
         mainCanvas.removeEventListener("click", tileClick);
         mainCanvas.removeEventListener("contextmenu", tileRightClick);
-        startGame(9, 9, 10);
+        startGame();
     }
 }

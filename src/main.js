@@ -2,10 +2,12 @@
 const mainCanvasId = "main-canvas";
 const startButtonId = "start-button";
 const flagsLabelId = "flags-label";
+const difficultySelectId = "difficulty-select";
 const mainCanvas = document.getElementById(mainCanvasId);
 const context = mainCanvas.getContext("2d");
 const startButton = document.getElementById(startButtonId);
 const flagsLabel = document.getElementById(flagsLabelId);
+const difficultySelect = document.getElementById(difficultySelectId);
 // GAME VARS
 const tileHeight = 32;
 const tileWidth = 32;
@@ -21,22 +23,49 @@ var State;
     State[State["gameOver"] = 1] = "gameOver";
 })(State || (State = {}));
 let gameState = State.gameOver;
-function startGame(columns, rows, bombs) {
+function getGameParams() {
+    let params = new Map;
+    switch (difficultySelect.value) {
+        case "easy":
+            params.set("columns", 9);
+            params.set("rows", 9);
+            params.set("bombs", 10);
+            break;
+        case "intermediate":
+            params.set("columns", 16);
+            params.set("rows", 16);
+            params.set("bombs", 40);
+            break;
+        case "hard":
+            params.set("columns", 30);
+            params.set("rows", 16);
+            params.set("bombs", 99);
+            break;
+        case "custom":
+            params.set("columns", 30);
+            params.set("rows", 16);
+            params.set("bombs", 99);
+            break;
+    }
+    return params;
+}
+function startGame() {
+    let gameParams = getGameParams();
     startButton.innerText = "Restart";
     startButton.onclick = () => {
         mainCanvas.removeEventListener("click", tileClick);
         mainCanvas.removeEventListener("contextmenu", tileRightClick);
-        startGame(9, 9, 10);
+        startGame();
     };
-    gameColumns = columns;
-    gameRows = rows;
-    gameBombs = bombs;
+    gameColumns = gameParams.get("columns");
+    gameRows = gameParams.get("rows");
+    gameBombs = gameParams.get("bombs");
     setup();
 }
 function setup() {
     gameState = State.inProgress;
-    const canvasHeight = gameColumns * tileHeight;
-    const canvasWidth = gameRows * tileWidth;
+    const canvasWidth = gameColumns * tileWidth;
+    const canvasHeight = gameRows * tileHeight;
     mainCanvas.height = canvasHeight;
     mainCanvas.width = canvasWidth;
     flagsLabel.innerText = flags.toString();
@@ -138,6 +167,7 @@ function randomizeBombs() {
             bombArray.push(tile);
         }
     }
+    console.log(bombArray);
     return bombArray;
 }
 function calculateValues(col, row, bombArray) {
@@ -182,6 +212,9 @@ function clickNeighbors(tile) {
         if (nTile.value == 0 && !(nTile === null || nTile === void 0 ? void 0 : nTile.clicked)) {
             nTile.click();
         }
+        //        if(nTile != undefined && nTile!.value == 0 && !nTile?.clicked){
+        //            nTile!.click();
+        //        } 
     }
 }
 function gameOver(result) {
@@ -191,6 +224,6 @@ function gameOver(result) {
     startButton.onclick = () => {
         mainCanvas.removeEventListener("click", tileClick);
         mainCanvas.removeEventListener("contextmenu", tileRightClick);
-        startGame(9, 9, 10);
+        startGame();
     };
 }
