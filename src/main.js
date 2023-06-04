@@ -65,6 +65,7 @@ function getGameParams() {
 }
 function startGame() {
     resultDiv.style.display = "none";
+    difficultySelect.disabled = true;
     let gameParams = getGameParams();
     if (difficultySelect.value != "custom") {
         gameColumns = gameParams.get("columns");
@@ -74,6 +75,10 @@ function startGame() {
     else {
         if (colsInput.valueAsNumber < 0 || rowsInput.valueAsNumber < 0 || bombsInput.valueAsNumber < 0) {
             alert("You have set invalid parameters");
+            return;
+        }
+        else if (colsInput.value == "" || rowsInput.value == "" || bombsInput.value == "") {
+            alert("Parameters cannot be empty");
             return;
         }
         else if (colsInput.valueAsNumber > maxNumberOfCols || rowsInput.valueAsNumber > maxNumberOfRows || bombsInput.valueAsNumber > (colsInput.valueAsNumber * rowsInput.valueAsNumber) - 1) {
@@ -89,6 +94,8 @@ function startGame() {
     startButton.innerText = "Restart";
     startButton.onclick = () => {
         if (confirm("Are you sure you want to restart the game?")) {
+            difficultySelect.disabled = false;
+            flagsLabel.innerText = "";
             mainCanvas.height = 9 * tileHeight;
             mainCanvas.width = 9 * tileWidth;
             mainCanvas.removeEventListener("click", tileClick);
