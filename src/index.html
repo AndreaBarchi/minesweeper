@@ -10,10 +10,21 @@
 <body>
     <div id="flags-div">
         <p>?:</p>
-        <p id="flags-label">10</p>
+        <p id="flags-label"></p>
+    </div>
+    <div id="result-div">
+        <p id="result-p"></p>   
     </div>
     <div id="canvas-div">
         <canvas id="main-canvas"></canvas>
+    </div>
+    <div id="custom-difficulty-div">
+        <label for="cols">Columns:</label>
+        <input type="number" id="cols" min="1" max="199"></input>
+        <label for="rows">Rows:</label>
+        <input type="number" id="rows" min="1" max="199"></input>
+        <label for="bombs">Bombs:</label>
+        <input type="number" id="bombs" min="1" max="199"></input>
     </div>
     <div id="command-buttons">
         <select id="difficulty-select">
@@ -25,7 +36,7 @@
         <div id="custom-difficulty">
             
         </div>
-        <button id="start-button" onclick="startGame(9, 9, 10)">Start game!</button>
+        <button id="start-button" onclick="startGame()">Start game!</button>
     </div>
     <script src="main.js"></script>
 </body>

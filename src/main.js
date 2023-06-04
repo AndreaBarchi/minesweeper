@@ -1,19 +1,23 @@
 "use strict";
-const mainCanvasId = "main-canvas";
-const startButtonId = "start-button";
-const flagsLabelId = "flags-label";
-const difficultySelectId = "difficulty-select";
-const mainCanvas = document.getElementById(mainCanvasId);
+const mainCanvas = document.getElementById("main-canvas");
 const context = mainCanvas.getContext("2d");
-const startButton = document.getElementById(startButtonId);
-const flagsLabel = document.getElementById(flagsLabelId);
-const difficultySelect = document.getElementById(difficultySelectId);
+const startButton = document.getElementById("start-button");
+const flagsLabel = document.getElementById("flags-label");
+const difficultySelect = document.getElementById("difficulty-select");
+const customDifficultyDiv = document.getElementById("custom-difficulty-div");
+const colsInput = document.getElementById("cols");
+const rowsInput = document.getElementById("rows");
+const bombsInput = document.getElementById("bombs");
+const resultDiv = document.getElementById("result-div");
+const resultP = document.getElementById("result-p");
 // GAME VARS
+const maxNumberOfCols = 40;
+const maxNumberOfRows = 40;
 const tileHeight = 32;
 const tileWidth = 32;
 let gameColumns = 9;
 let gameRows = 9;
-let gameBombs = 10;
+let gameBombs = 0;
 let flags = 10;
 let tiles = new Map;
 let tilesCount = 0;
@@ -23,6 +27,16 @@ var State;
     State[State["gameOver"] = 1] = "gameOver";
 })(State || (State = {}));
 let gameState = State.gameOver;
+if (customDifficultyDiv != undefined) {
+    difficultySelect.addEventListener("change", () => {
+        if (difficultySelect.value == "custom") {
+            customDifficultyDiv.style.display = "flex";
+        }
+        else {
+            customDifficultyDiv.style.display = "none";
+        }
+    });
+}
 function getGameParams() {
     let params = new Map;
     switch (difficultySelect.value) {
@@ -50,16 +64,44 @@ function getGameParams() {
     return params;
 }
 function startGame() {
+    resultDiv.style.display = "none";
     let gameParams = getGameParams();
+    if (difficultySelect.value != "custom") {
+        gameColumns = gameParams.get("columns");
+        gameRows = gameParams.get("rows");
+        gameBombs = gameParams.get("bombs");
+    }
+    else {
+        if (colsInput.valueAsNumber < 0 || rowsInput.valueAsNumber < 0 || bombsInput.valueAsNumber < 0) {
+            alert("You have set invalid parameters");
+            return;
+        }
+        else if (colsInput.valueAsNumber > maxNumberOfCols || rowsInput.valueAsNumber > maxNumberOfRows || bombsInput.valueAsNumber > (colsInput.valueAsNumber * rowsInput.valueAsNumber) - 1) {
+            alert("You have set invalid parameters");
+            return;
+        }
+        else {
+            gameColumns = colsInput.valueAsNumber;
+            gameRows = rowsInput.valueAsNumber;
+            gameBombs = bombsInput.valueAsNumber;
+        }
+    }
     startButton.innerText = "Restart";
     startButton.onclick = () => {
-        mainCanvas.removeEventListener("click", tileClick);
-        mainCanvas.removeEventListener("contextmenu", tileRightClick);
-        startGame();
+        if (confirm("Are you sure you want to restart the game?")) {
+            mainCanvas.height = 9 * tileHeight;
+            mainCanvas.width = 9 * tileWidth;
+            mainCanvas.removeEventListener("click", tileClick);
+            mainCanvas.removeEventListener("contextmenu", tileRightClick);
+            context.fillStyle = "red";
+            context.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+            startButton.innerText = "Start new game!";
+            startButton.onclick = () => {
+                startGame();
+            };
+        }
     };
-    gameColumns = gameParams.get("columns");
-    gameRows = gameParams.get("rows");
-    gameBombs = gameParams.get("bombs");
+    flags = gameBombs;
     setup();
 }
 function setup() {
@@ -103,9 +145,11 @@ function setup() {
                             context.fillStyle = "black";
                             context.font = "25pt Arial";
                             context.textAlign = "center";
-                            context.fillText(tile.value.toString(), tcol + tileWidth / 2, trow + tileHeight - 4);
                             if (tile.value == 0) {
                                 clickNeighbors(tile);
+                            }
+                            else {
+                                context.fillText(tile.value.toString(), tcol + tileWidth / 2, trow + tileHeight - 4);
                             }
                         }
                     }
@@ -131,15 +175,11 @@ function setup() {
                 }
             };
             tiles.set((col) + "-" + (row), tile);
-            if (tile.isBomb) {
-                fillTile(tcol, trow, "red");
-            }
-            else {
-                fillTile(tcol, trow, "green");
-                tilesCount += 1;
-            }
+            fillTile(tcol, trow, "green");
+            tilesCount += 1;
         }
     }
+    console.log(tiles);
     mainCanvas.addEventListener("click", tileClick);
     mainCanvas.addEventListener("contextmenu", tileRightClick);
 }
@@ -167,7 +207,6 @@ function randomizeBombs() {
             bombArray.push(tile);
         }
     }
-    console.log(bombArray);
     return bombArray;
 }
 function calculateValues(col, row, bombArray) {
@@ -212,14 +251,15 @@ function clickNeighbors(tile) {
         if (nTile.value == 0 && !(nTile === null || nTile === void 0 ? void 0 : nTile.clicked)) {
             nTile.click();
         }
-        //        if(nTile != undefined && nTile!.value == 0 && !nTile?.clicked){
-        //            nTile!.click();
-        //        } 
     }
 }
 function gameOver(result) {
     console.log(result == "won" ? "You won!" : "You lost");
     gameState = State.gameOver;
+    resultDiv.style.display = "flex";
+    resultP.style.width = mainCanvas.width.toString() + "px";
+    resultP.style.backgroundColor = result == "won" ? "green" : "red";
+    resultP.innerText = result == "won" ? "You Won!" : "You Lost";
     startButton.innerText = "Start new Game";
     startButton.onclick = () => {
         mainCanvas.removeEventListener("click", tileClick);
